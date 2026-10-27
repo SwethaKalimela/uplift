@@ -27,4 +27,10 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
+  {
+    files: ["src/features/dependencies/dependency-table.tsx"],
+    rules: {
+      "react-hooks/incompatible-library": "off",
+    },
+  },
 );
