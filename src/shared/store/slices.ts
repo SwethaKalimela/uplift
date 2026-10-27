@@ -9,7 +9,11 @@ export const defaultFilters: Filters = { search: "", bump: "all", group: "all", 
 export const createProjectSlice: Slice<ProjectSlice> = (set) => ({
   project: null,
   setProject: (project) =>
-    set({ project: { ...project, importedAt: Date.now() }, filters: defaultFilters }, false, "project/set"),
+    set(
+      { project: { ...project, importedAt: Date.now() }, filters: defaultFilters, draft: [] },
+      false,
+      "project/set",
+    ),
   clearProject: () => set({ project: null }, false, "project/clear"),
 });
 
