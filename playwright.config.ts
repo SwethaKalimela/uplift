@@ -1,0 +1,21 @@
+import { defineConfig, devices } from "@playwright/test";
+
+const port = 3100;
+const baseURL = `http://127.0.0.1:${port}`;
+
+export default defineConfig({
+  testDir: "./e2e",
+  fullyParallel: false,
+  retries: 0,
+  use: {
+    baseURL,
+    trace: "on-first-retry",
+  },
+  webServer: {
+    command: `npx next dev -p ${port}`,
+    url: baseURL,
+    reuseExistingServer: false,
+    timeout: 120_000,
+  },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+});

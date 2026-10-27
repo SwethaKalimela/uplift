@@ -33,7 +33,9 @@ export function CacheInspector() {
 
   useEffect(() => {
     const cache = queryClient.getQueryCache();
+    let alive = true;
     const sync = () => {
+      if (!alive) return;
       setRows(
         cache.getAll().map((query) => ({
           hash: query.queryHash,
@@ -45,17 +47,24 @@ export function CacheInspector() {
       );
     };
     sync();
-    return cache.subscribe((event) => {
-      sync();
-      if (event.type === "updated") {
-        const action = event.action.type;
-        if (action === "success" || action === "error" || action === "fetch") {
-          setLog((current) =>
-            [{ id: Date.now(), at: new Date().toLocaleTimeString(), text: `${action} ${event.query.queryHash}` }, ...current].slice(0, 40),
-          );
+    const unsubscribe = cache.subscribe((event) => {
+      queueMicrotask(() => {
+        if (!alive) return;
+        sync();
+        if (event.type === "updated") {
+          const action = event.action.type;
+          if (action === "success" || action === "error" || action === "fetch") {
+            setLog((current) =>
+              [{ id: Date.now(), at: new Date().toLocaleTimeString(), text: `${action} ${event.query.queryHash}` }, ...current].slice(0, 40),
+            );
+          }
         }
-      }
+      });
     });
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
   }, [queryClient]);
 
   return (
