@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toInstallCommand, toMarkdown } from "./export";
+import { toInstallCommand, toMarkdown, toSpec } from "./export";
 
 describe("plan export", () => {
   const items = [
@@ -7,6 +7,10 @@ describe("plan export", () => {
     { name: "lodash", target: "4.17.21", status: "skipped" },
     { name: "zod", target: "4.6.7", status: "upgraded" },
   ];
+
+  it("builds an install spec", () => {
+    expect(toSpec("react", "19.3.1")).toBe("react@19.3.1");
+  });
 
   it("builds an install command that skips skipped packages", () => {
     expect(toInstallCommand(items)).toBe("npm install react@19.3.1 zod@4.6.7");

@@ -27,6 +27,8 @@ function toneFor(row: Snapshot) {
 export function CacheInspector() {
   const open = useWorkspace((state) => state.inspectorOpen);
   const setOpen = useWorkspace((state) => state.setInspectorOpen);
+  const faultSaves = useWorkspace((state) => state.faultSaves);
+  const setFaultSaves = useWorkspace((state) => state.setFaultSaves);
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Snapshot[]>([]);
   const [log, setLog] = useState<LogItem[]>([]);
@@ -78,9 +80,17 @@ export function CacheInspector() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">Queries</h3>
-              <Button size="sm" variant="ghost" onClick={() => queryClient.invalidateQueries()}>
-                Invalidate all
-              </Button>
+              <div className="flex items-center gap-2">
+                {process.env.NODE_ENV !== "production" && (
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={faultSaves} onChange={(event) => setFaultSaves(event.target.checked)} />
+                    Force next save to fail
+                  </label>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => queryClient.invalidateQueries()}>
+                  Invalidate all
+                </Button>
+              </div>
             </div>
             <ul className="flex flex-col gap-2 font-mono text-xs">
               {rows.map((row) => (

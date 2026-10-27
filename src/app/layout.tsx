@@ -26,11 +26,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children, drawer }: { children: ReactNode; drawer: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-dvh">
+      <body className="h-dvh overflow-hidden">
         <Providers>
-          <SiteHeader />
-          {children}
-          <Suspense fallback={null}>{drawer}</Suspense>
+          <div className="flex h-full flex-col">
+            <SiteHeader />
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+            <Suspense fallback={null}>{drawer}</Suspense>
+          </div>
         </Providers>
       </body>
     </html>

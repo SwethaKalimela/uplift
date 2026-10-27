@@ -11,8 +11,12 @@ function linesFromDraft(draft: readonly DraftItem[]): Line[] {
   return draft.map((item) => ({ name: item.name, target: item.target, note: item.note }));
 }
 
+export function toSpec(name: string, target: string) {
+  return `${name}@${target}`;
+}
+
 export function toInstallCommand(items: readonly Line[]) {
-  const specs = items.filter((item) => item.status !== "skipped").map((item) => `${item.name}@${item.target}`);
+  const specs = items.filter((item) => item.status !== "skipped").map((item) => toSpec(item.name, item.target));
   return specs.length > 0 ? `npm install ${specs.join(" ")}` : "";
 }
 

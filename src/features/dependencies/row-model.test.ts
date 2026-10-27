@@ -36,6 +36,43 @@ describe("filterRows", () => {
     expect(filterRows(rows, { ...defaultFilters, group: "devDependencies" }).map((item) => item.spec.name)).toEqual(["zod"]);
     expect(filterRows(rows, { ...defaultFilters, bump: "major" }).map((item) => item.spec.name)).toEqual(["react"]);
   });
+
+  it("treats advisories and deprecations as risky, not major bumps alone", () => {
+    const mixed = [
+      rows[0]!,
+      row({
+        spec: spec("lodash"),
+        assessment: { kind: "behind", bump: "patch", current: v("4.17.20"), latest: v("4.17.21"), inRange: true },
+        advisories: [
+          {
+            id: 1,
+            title: "Prototype pollution",
+            url: "https://example.com",
+            severity: "high",
+            vulnerableVersions: "<4.17.21",
+          },
+        ],
+      }),
+      row({
+        spec: spec("querystring"),
+        assessment: { kind: "behind", bump: "minor", current: v("0.2.0"), latest: v("0.2.1"), inRange: true },
+        summary: {
+          name: spec("querystring").name,
+          description: null,
+          license: null,
+          homepage: null,
+          repository: null,
+          latest: v("0.2.1"),
+          latestPublishedAt: null,
+          deprecated: "Use URLSearchParams",
+          versionCount: 1,
+          versions: [],
+        },
+      }),
+    ];
+
+    expect(filterRows(mixed, { ...defaultFilters, riskyOnly: true }).map((item) => item.spec.name)).toEqual(["lodash", "querystring"]);
+  });
 });
 
 describe("sortRows", () => {

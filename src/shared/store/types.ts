@@ -64,9 +64,14 @@ export type DraftSlice = {
 export type PanelSlice = {
   inspectorOpen: boolean;
   commandOpen: boolean;
+  planOpen: boolean;
+  planAutoOpen: boolean;
+  autoOpenSeq: number;
+  countPulse: number;
   faultSaves: boolean;
   setInspectorOpen: (open: boolean) => void;
   setCommandOpen: (open: boolean) => void;
+  setPlanOpen: (open: boolean) => void;
   setFaultSaves: (fault: boolean) => void;
 };
 

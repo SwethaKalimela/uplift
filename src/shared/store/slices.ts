@@ -10,11 +10,31 @@ export const createProjectSlice: Slice<ProjectSlice> = (set) => ({
   project: null,
   setProject: (project) =>
     set(
-      { project: { ...project, importedAt: Date.now() }, filters: defaultFilters, draft: [], savedPlanId: null },
+      {
+        project: { ...project, importedAt: Date.now() },
+        filters: defaultFilters,
+        draft: [],
+        savedPlanId: null,
+        planOpen: false,
+        planAutoOpen: false,
+        autoOpenSeq: 0,
+        countPulse: 0,
+      },
       false,
       "project/set",
     ),
-  clearProject: () => set({ project: null }, false, "project/clear"),
+  clearProject: () =>
+    set(
+      {
+        project: null,
+        filters: defaultFilters,
+        sort: { key: "bump", direction: "desc" },
+        planOpen: false,
+        planAutoOpen: false,
+      },
+      false,
+      "project/clear",
+    ),
 });
 
 export const createFilterSlice: Slice<FilterSlice> = (set) => ({
@@ -45,10 +65,11 @@ export const createDraftSlice: Slice<DraftSlice> = (set) => ({
   savedPlanId: null,
   addToDraft: (name, target) =>
     set(
-      (state) =>
-        state.draft.some((item) => item.name === name)
-          ? state
-          : { draft: [...state.draft, { name, target, note: "" }] },
+      (state) => {
+        const exists = state.draft.some((item) => item.name === name);
+        if (exists) return state;
+        return afterAdd(state, [...state.draft, { name, target, note: "" }], 1);
+      },
       false,
       "draft/add",
     ),
@@ -57,7 +78,8 @@ export const createDraftSlice: Slice<DraftSlice> = (set) => ({
       (state) => {
         const existing = new Set(state.draft.map((item) => item.name));
         const additions = items.filter((item) => !existing.has(item.name)).map((item) => ({ ...item, note: "" }));
-        return additions.length === 0 ? state : { draft: [...state.draft, ...additions] };
+        if (additions.length === 0) return state;
+        return afterAdd(state, [...state.draft, ...additions], additions.length);
       },
       false,
       "draft/addMany",
@@ -83,7 +105,8 @@ export const createDraftSlice: Slice<DraftSlice> = (set) => ({
       false,
       "draft/note",
     ),
-  clearDraft: () => set({ draft: [] }, false, "draft/clear"),
+  clearDraft: () =>
+    set({ draft: [], planOpen: false, planAutoOpen: false, autoOpenSeq: 0, countPulse: 0 }, false, "draft/clear"),
   rememberEditToken: (id, token) =>
     set((state) => ({ editTokens: { ...state.editTokens, [id]: token } }), false, "plan/rememberToken"),
   setSavedPlanId: (savedPlanId) => set({ savedPlanId }, false, "plan/setId"),
@@ -92,8 +115,25 @@ export const createDraftSlice: Slice<DraftSlice> = (set) => ({
 export const createPanelSlice: Slice<PanelSlice> = (set) => ({
   inspectorOpen: false,
   commandOpen: false,
+  planOpen: false,
+  planAutoOpen: false,
+  autoOpenSeq: 0,
+  countPulse: 0,
   faultSaves: false,
   setInspectorOpen: (inspectorOpen) => set({ inspectorOpen }, false, "panel/inspector"),
   setCommandOpen: (commandOpen) => set({ commandOpen }, false, "panel/command"),
+  setPlanOpen: (planOpen) => set({ planOpen, planAutoOpen: false }, false, "panel/plan"),
   setFaultSaves: (faultSaves) => set({ faultSaves }, false, "panel/fault"),
 });
+
+function afterAdd(state: WorkspaceState, draft: WorkspaceState["draft"], added: number) {
+  if (added <= 0) return { draft };
+  const autoOpen = draft.length <= 3;
+  return {
+    draft,
+    planOpen: autoOpen ? true : state.planOpen,
+    planAutoOpen: autoOpen ? true : state.planAutoOpen,
+    autoOpenSeq: autoOpen ? (state.autoOpenSeq ?? 0) + 1 : (state.autoOpenSeq ?? 0),
+    countPulse: autoOpen ? (state.countPulse ?? 0) : (state.countPulse ?? 0) + 1,
+  };
+}

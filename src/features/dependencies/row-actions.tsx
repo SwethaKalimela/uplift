@@ -16,15 +16,15 @@ export function RowActions({ name, assessment }: { name: PackageName; assessment
 
   if (inDraft) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => removeFromDraft(name)}>
-        <Check className="text-success" />
+      <Button variant="ghost" size="sm" onClick={() => removeFromDraft(name)} className="text-success">
+        <Check />
         In plan
       </Button>
     );
   }
 
   return (
-      <Button variant="secondary" size="sm" onClick={() => addToDraft(name, assessment.latest)}>
+    <Button variant="ghost" size="sm" onClick={() => addToDraft(name, assessment.latest)}>
       <Plus />
       Add
     </Button>

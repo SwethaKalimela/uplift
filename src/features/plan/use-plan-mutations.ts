@@ -50,7 +50,16 @@ export function usePlanMutations() {
       rememberEditToken(result.plan.id, result.editToken);
       setSavedPlanId(result.plan.id);
       queryClient.setQueryData(queryKeys.plan(result.plan.id), result.plan);
-      toast.success("Plan saved", { description: "Anyone with the link can view it." });
+      const url = `${window.location.origin}/p/${result.plan.id}`;
+      const copied = navigator.clipboard
+        ? navigator.clipboard.writeText(url).then(
+            () => true,
+            () => false,
+          )
+        : Promise.resolve(false);
+      void copied.then((ok) => {
+        toast.success(ok ? "Share link copied" : "Plan saved");
+      });
     },
   });
 

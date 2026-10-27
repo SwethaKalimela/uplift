@@ -28,7 +28,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/features/dependencies/dependency-table.tsx"],
+    files: ["src/features/dependencies/dependency-table.tsx", "src/features/plan/plan-package-list.tsx"],
     rules: {
       "react-hooks/incompatible-library": "off",
     },

@@ -17,6 +17,7 @@ export function CommandPalette() {
   const project = useWorkspace((state) => state.project);
   const addManyToDraft = useWorkspace((state) => state.addManyToDraft);
   const setInspectorOpen = useWorkspace((state) => state.setInspectorOpen);
+  const setPlanOpen = useWorkspace((state) => state.setPlanOpen);
   const clearProject = useWorkspace((state) => state.clearProject);
   const clearDraft = useWorkspace((state) => state.clearDraft);
   const { setTheme, resolvedTheme } = useTheme();
@@ -64,6 +65,16 @@ export function CommandPalette() {
             }}
           >
             Add all majors to plan
+          </Command.Item>
+          <Command.Item
+            className="flex cursor-pointer items-center rounded-md px-2 py-2 text-sm text-foreground aria-selected:bg-muted"
+            onSelect={() => {
+              setPlanOpen(false);
+              setOpen(false);
+              router.push("/plan");
+            }}
+          >
+            Open plan
           </Command.Item>
           <Command.Item
             className="flex cursor-pointer items-center rounded-md px-2 py-2 text-sm text-foreground aria-selected:bg-muted"

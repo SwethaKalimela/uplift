@@ -1,9 +1,13 @@
 "use client";
 
+import { Plus, Search } from "lucide-react";
+import { cn } from "@/shared/lib/cn";
+import type { PackageName, SemverString } from "@/shared/schemas/primitives";
 import { useWorkspaceShallow } from "@/shared/store/workspace";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { countByBump, type RowModel } from "./row-model";
+import { Tooltip } from "@/shared/ui/tooltip";
+import { countByBump, countRisky, type RowModel } from "./row-model";
 
 const BUMPS = [
   { id: "all", label: "All" },
@@ -13,58 +17,83 @@ const BUMPS = [
   { id: "patch", label: "Patch" },
 ] as const;
 
-export function FilterBar({ rows, fetching }: { rows: readonly RowModel[]; fetching: number }) {
-  const { filters, setSearch, setBumpFilter, toggleRiskyOnly, resetFilters, addManyToDraft } = useWorkspaceShallow((state) => ({
+export function FilterBar({
+  rows,
+  visibleCount,
+  addable,
+}: {
+  rows: readonly RowModel[];
+  visibleCount: number;
+  addable: ReadonlyArray<{ name: PackageName; target: SemverString }>;
+}) {
+  const { filters, setSearch, setBumpFilter, toggleRiskyOnly, addManyToDraft } = useWorkspaceShallow((state) => ({
     filters: state.filters,
     setSearch: state.setSearch,
     setBumpFilter: state.setBumpFilter,
     toggleRiskyOnly: state.toggleRiskyOnly,
-    resetFilters: state.resetFilters,
     addManyToDraft: state.addManyToDraft,
   }));
   const counts = countByBump(rows);
-  const majors = rows.flatMap((row) =>
-    row.assessment?.kind === "behind" && row.assessment.bump === "major"
-      ? [{ name: row.spec.name, target: row.assessment.latest }]
-      : [],
-  );
+  const riskyCount = countRisky(rows);
 
   return (
-    <div className="flex flex-col gap-3 border-b bg-surface px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center gap-2 border-b px-5 py-2.5">
+      <label className="relative w-52 shrink-0">
+        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={filters.search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Filter packages"
           aria-label="Filter packages"
-          className="max-w-xs"
+          className="h-8 border-transparent bg-muted pl-8"
         />
-        {BUMPS.map((bump) => (
-          <Button
-            key={bump.id}
-            size="sm"
-            variant={filters.bump === bump.id ? "primary" : "secondary"}
-            onClick={() => setBumpFilter(bump.id)}
-          >
-            {bump.label}
-            {bump.id === "major" && counts.major > 0 ? ` ${counts.major}` : null}
-          </Button>
-        ))}
-        <Button size="sm" variant={filters.riskyOnly ? "primary" : "ghost"} onClick={toggleRiskyOnly}>
-          Risky only
-        </Button>
-        <Button size="sm" variant="ghost" onClick={resetFilters}>
-          Reset
-        </Button>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {fetching > 0 ? `Loading ${fetching} packages` : `${rows.length} packages`}
-        </span>
+      </label>
+
+      <div role="group" aria-label="Filter by bump" className="flex h-8 shrink-0 items-center rounded-md bg-muted p-0.5">
+        {BUMPS.map((bump) => {
+          const count = bump.id === "major" ? counts.major : bump.id === "outdated" ? counts.major + counts.minor + counts.patch : null;
+          return (
+            <button
+              key={bump.id}
+              type="button"
+              onClick={() => setBumpFilter(bump.id)}
+              className={cn(
+                "h-7 rounded-[5px] px-2.5 text-xs font-medium transition-colors",
+                filters.bump === bump.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {bump.label}
+              {count ? <span className="ml-1 tabular-nums text-muted-foreground">{count}</span> : null}
+            </button>
+          );
+        })}
       </div>
-      {majors.length > 0 && (
-        <Button size="sm" variant="secondary" className="self-start" onClick={() => addManyToDraft(majors)}>
-          Add {majors.length} major{majors.length === 1 ? "" : "s"} to plan
-        </Button>
-      )}
+
+      <Tooltip content="Packages with npm security advisories or marked deprecated">
+        <button
+          type="button"
+          aria-pressed={filters.riskyOnly}
+          aria-label="Filter to risky packages"
+          onClick={toggleRiskyOnly}
+          className={cn(
+            "h-8 rounded-md px-2.5 text-xs font-medium transition-colors",
+            filters.riskyOnly ? "bg-major/15 text-major" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          Risky
+          {riskyCount > 0 && <span className="ml-1 tabular-nums text-muted-foreground">{riskyCount}</span>}
+        </button>
+      </Tooltip>
+
+      <div className="ml-auto flex items-center gap-3">
+        <span className="text-xs tabular-nums text-muted-foreground">{visibleCount} packages</span>
+        {addable.length > 0 && (
+          <Button size="sm" variant="secondary" onClick={() => addManyToDraft(addable)}>
+            <Plus />
+            Add {addable.length} to plan
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

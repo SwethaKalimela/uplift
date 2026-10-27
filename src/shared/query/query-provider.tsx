@@ -21,7 +21,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
       onSuccess={() => queryClient.resumePausedMutations()}
     >
       {children}
-      {process.env.NODE_ENV === "development" && <Devtools buttonPosition="bottom-left" />}
+      {process.env.NODE_ENV === "development" && <Devtools buttonPosition="bottom-right" />}
     </PersistQueryClientProvider>
   );
 }

@@ -1,21 +1,23 @@
 import type { PlanId } from "@/shared/schemas/primitives";
-import { defaultFilters } from "./slices";
-import type { DraftItem, Filters, Project, Sort } from "./types";
+import type { DraftItem, Project } from "./types";
 
-export const STORE_VERSION = 3;
+export const STORE_VERSION = 4;
 
 export type PersistedWorkspace = {
   project: Project | null;
-  filters: Filters;
-  sort: Sort;
   draft: DraftItem[];
   editTokens: Record<PlanId, string>;
   savedPlanId: PlanId | null;
 };
 
-type V1Workspace = Omit<PersistedWorkspace, "draft" | "editTokens"> & {
-  draft: Array<Pick<DraftItem, "name" | "target">>;
+type LegacyWorkspace = {
+  project?: Project | null;
+  filters?: Record<string, unknown>;
+  sort?: unknown;
+  draft?: Array<Pick<DraftItem, "name" | "target"> & Partial<DraftItem>>;
+  editTokens?: Record<PlanId, string>;
   planTokens?: Record<string, string>;
+  savedPlanId?: PlanId | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -24,35 +26,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function migrateWorkspace(persisted: unknown, version: number): PersistedWorkspace {
   if (!isRecord(persisted)) return emptyWorkspace();
+  const current = persisted as LegacyWorkspace;
 
-  if (version < 2) {
-    const v1 = persisted as Partial<V1Workspace>;
-    return {
-      project: v1.project ?? null,
-      filters: { ...defaultFilters, ...v1.filters },
-      sort: v1.sort ?? { key: "bump", direction: "desc" },
-      draft: (v1.draft ?? []).map((item) => ({ ...item, note: "" })),
-      editTokens: (v1.planTokens ?? {}) as Record<PlanId, string>,
-      savedPlanId: null,
-    };
-  }
-
-  const current = persisted as Partial<PersistedWorkspace>;
   return {
     project: current.project ?? null,
-    filters: { ...defaultFilters, ...current.filters },
-    sort: current.sort ?? { key: "bump", direction: "desc" },
-    draft: current.draft ?? [],
-    editTokens: current.editTokens ?? {},
-    savedPlanId: current.savedPlanId ?? null,
+    draft: (current.draft ?? []).map((item) => ({ name: item.name, target: item.target, note: item.note ?? "" })),
+    editTokens: (version < 2 ? current.planTokens : current.editTokens) ?? {},
+    savedPlanId: version < 2 ? null : (current.savedPlanId ?? null),
   };
 }
 
 export function emptyWorkspace(): PersistedWorkspace {
   return {
     project: null,
-    filters: defaultFilters,
-    sort: { key: "bump", direction: "desc" },
     draft: [],
     editTokens: {},
     savedPlanId: null,

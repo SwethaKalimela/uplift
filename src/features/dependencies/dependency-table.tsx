@@ -1,20 +1,35 @@
 "use client";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useWorkspace } from "@/shared/store/workspace";
+import { cn } from "@/shared/lib/cn";
+import { Button } from "@/shared/ui/button";
 import { DependencyRow } from "./dependency-row";
 import { FilterBar } from "./filter-bar";
+import { DEPENDENCY_GRID } from "./table-layout";
 import { useDependencyRows } from "./use-dependency-rows";
 
-const COLUMNS = ["Package", "Installed", "Latest", "Bump", "Downloads", "Published", ""];
-const ROW_HEIGHT = 64;
+const COLUMNS = ["Package", "Version", "Bump", "Activity", "Risk", ""];
+const ROW_HEIGHT = 52;
 
 export function DependencyTable() {
   "use no memo";
   const dependencies = useWorkspace((state) => state.project?.dependencies ?? []);
+  const draft = useWorkspace((state) => state.draft);
+  const resetFilters = useWorkspace((state) => state.resetFilters);
   const { rows, visible, fetchingPackages } = useDependencyRows(dependencies);
   const parentRef = useRef<HTMLDivElement>(null);
+  const inPlan = useMemo(() => new Set(draft.map((item) => item.name)), [draft]);
+  const addable = useMemo(
+    () =>
+      visible.flatMap((row) =>
+        row.assessment?.kind === "behind" && !inPlan.has(row.spec.name)
+          ? [{ name: row.spec.name, target: row.assessment.latest }]
+          : [],
+      ),
+    [visible, inPlan],
+  );
   const virtualizer = useVirtualizer({
     count: visible.length,
     getScrollElement: () => parentRef.current,
@@ -23,21 +38,23 @@ export function DependencyTable() {
   });
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-surface">
-      <FilterBar rows={rows} fetching={fetchingPackages} />
-      <div role="table" aria-label="Dependencies" className="flex min-h-0 flex-1 flex-col">
-        <div
-          role="row"
-          className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.6fr)_auto] gap-3 border-b bg-surface-raised px-4 py-2 text-xs font-medium text-muted-foreground"
-        >
-          {COLUMNS.map((column) => (
-            <span key={column || "actions"}>{column}</span>
-          ))}
-        </div>
-        <div ref={parentRef} className="min-h-0 flex-1 overflow-auto">
-          {visible.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No packages match these filters.</p>
-          ) : (
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <FilterBar rows={rows} visibleCount={visible.length} addable={addable} />
+      <div role="table" aria-label="Dependencies" aria-busy={fetchingPackages > 0} className="flex min-h-0 flex-1 flex-col">
+        {visible.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5">
+            <p className="text-sm text-muted-foreground">No packages match these filters.</p>
+            <Button size="sm" variant="secondary" onClick={resetFilters}>
+              Clear filters
+            </Button>
+          </div>
+        ) : (
+          <div ref={parentRef} className="min-h-0 flex-1 overflow-auto">
+            <div role="row" className={cn(DEPENDENCY_GRID, "sticky top-0 z-10 h-8 bg-background text-xs text-muted-foreground")}>
+              {COLUMNS.map((column) => (
+                <span key={column || "actions"}>{column}</span>
+              ))}
+            </div>
             <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
               {virtualizer.getVirtualItems().map((item) => {
                 const row = visible[item.index];
@@ -58,8 +75,8 @@ export function DependencyTable() {
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -21,10 +21,13 @@ function matchesBump(filter: BumpFilter, assessment: Assessment | null) {
   return assessment.kind === "behind" && assessment.bump === filter;
 }
 
-function isRisky(row: RowModel) {
+export function isRisky(row: RowModel) {
   if (row.advisories.length > 0) return true;
-  if (row.summary?.deprecated) return true;
-  return row.assessment?.kind === "behind" && row.assessment.bump === "major";
+  return Boolean(row.summary?.deprecated);
+}
+
+export function countRisky(rows: readonly RowModel[]) {
+  return rows.filter(isRisky).length;
 }
 
 export function filterRows(rows: readonly RowModel[], filters: Filters) {

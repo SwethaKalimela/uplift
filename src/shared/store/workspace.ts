@@ -22,8 +22,6 @@ export const useWorkspace = create<WorkspaceState>()(
           skipHydration: true,
           partialize: (state): PersistedWorkspace => ({
             project: state.project,
-            filters: state.filters,
-            sort: state.sort,
             draft: state.draft,
             editTokens: state.editTokens,
             savedPlanId: state.savedPlanId,
