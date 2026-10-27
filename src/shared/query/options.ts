@@ -1,5 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { createLimiter } from "@/shared/lib/limiter";
+import { encodePackagePath } from "@/shared/lib/package-path";
 import type { PackageName } from "@/shared/schemas/primitives";
 import {
   AdvisoriesSchema,
@@ -23,10 +24,6 @@ export const freshness = {
 } as const;
 
 export const packageRequests = createLimiter(6);
-
-function encodePackagePath(name: PackageName) {
-  return name.split("/").map(encodeURIComponent).join("/");
-}
 
 export function packageQuery(name: PackageName) {
   return queryOptions({

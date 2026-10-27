@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SiteHeader } from "@/features/shell/site-header";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -23,13 +23,14 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children, drawer }: { children: ReactNode; drawer: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-dvh">
         <Providers>
           <SiteHeader />
           {children}
+          <Suspense fallback={null}>{drawer}</Suspense>
         </Providers>
       </body>
     </html>
