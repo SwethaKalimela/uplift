@@ -2,7 +2,7 @@ import type { PlanId } from "@/shared/schemas/primitives";
 import { defaultFilters } from "./slices";
 import type { DraftItem, Filters, Project, Sort } from "./types";
 
-export const STORE_VERSION = 2;
+export const STORE_VERSION = 3;
 
 export type PersistedWorkspace = {
   project: Project | null;
@@ -10,6 +10,7 @@ export type PersistedWorkspace = {
   sort: Sort;
   draft: DraftItem[];
   editTokens: Record<PlanId, string>;
+  savedPlanId: PlanId | null;
 };
 
 type V1Workspace = Omit<PersistedWorkspace, "draft" | "editTokens"> & {
@@ -32,10 +33,19 @@ export function migrateWorkspace(persisted: unknown, version: number): Persisted
       sort: v1.sort ?? { key: "bump", direction: "desc" },
       draft: (v1.draft ?? []).map((item) => ({ ...item, note: "" })),
       editTokens: (v1.planTokens ?? {}) as Record<PlanId, string>,
+      savedPlanId: null,
     };
   }
 
-  return persisted as PersistedWorkspace;
+  const current = persisted as Partial<PersistedWorkspace>;
+  return {
+    project: current.project ?? null,
+    filters: { ...defaultFilters, ...current.filters },
+    sort: current.sort ?? { key: "bump", direction: "desc" },
+    draft: current.draft ?? [],
+    editTokens: current.editTokens ?? {},
+    savedPlanId: current.savedPlanId ?? null,
+  };
 }
 
 export function emptyWorkspace(): PersistedWorkspace {
@@ -45,5 +55,6 @@ export function emptyWorkspace(): PersistedWorkspace {
     sort: { key: "bump", direction: "desc" },
     draft: [],
     editTokens: {},
+    savedPlanId: null,
   };
 }

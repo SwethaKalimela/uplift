@@ -50,6 +50,7 @@ export type FilterSlice = {
 export type DraftSlice = {
   draft: DraftItem[];
   editTokens: Record<PlanId, string>;
+  savedPlanId: PlanId | null;
   addToDraft: (name: PackageName, target: SemverString) => void;
   addManyToDraft: (items: ReadonlyArray<{ name: PackageName; target: SemverString }>) => void;
   removeFromDraft: (name: PackageName) => void;
@@ -57,13 +58,16 @@ export type DraftSlice = {
   setDraftNote: (name: PackageName, note: string) => void;
   clearDraft: () => void;
   rememberEditToken: (id: PlanId, token: string) => void;
+  setSavedPlanId: (id: PlanId | null) => void;
 };
 
 export type PanelSlice = {
   inspectorOpen: boolean;
   commandOpen: boolean;
+  faultSaves: boolean;
   setInspectorOpen: (open: boolean) => void;
   setCommandOpen: (open: boolean) => void;
+  setFaultSaves: (fault: boolean) => void;
 };
 
 export type WorkspaceState = ProjectSlice & FilterSlice & DraftSlice & PanelSlice;

@@ -10,7 +10,7 @@ export const createProjectSlice: Slice<ProjectSlice> = (set) => ({
   project: null,
   setProject: (project) =>
     set(
-      { project: { ...project, importedAt: Date.now() }, filters: defaultFilters, draft: [] },
+      { project: { ...project, importedAt: Date.now() }, filters: defaultFilters, draft: [], savedPlanId: null },
       false,
       "project/set",
     ),
@@ -42,6 +42,7 @@ export const createFilterSlice: Slice<FilterSlice> = (set) => ({
 export const createDraftSlice: Slice<DraftSlice> = (set) => ({
   draft: [],
   editTokens: {},
+  savedPlanId: null,
   addToDraft: (name, target) =>
     set(
       (state) =>
@@ -85,11 +86,14 @@ export const createDraftSlice: Slice<DraftSlice> = (set) => ({
   clearDraft: () => set({ draft: [] }, false, "draft/clear"),
   rememberEditToken: (id, token) =>
     set((state) => ({ editTokens: { ...state.editTokens, [id]: token } }), false, "plan/rememberToken"),
+  setSavedPlanId: (savedPlanId) => set({ savedPlanId }, false, "plan/setId"),
 });
 
 export const createPanelSlice: Slice<PanelSlice> = (set) => ({
   inspectorOpen: false,
   commandOpen: false,
+  faultSaves: false,
   setInspectorOpen: (inspectorOpen) => set({ inspectorOpen }, false, "panel/inspector"),
   setCommandOpen: (commandOpen) => set({ commandOpen }, false, "panel/command"),
+  setFaultSaves: (faultSaves) => set({ faultSaves }, false, "panel/fault"),
 });

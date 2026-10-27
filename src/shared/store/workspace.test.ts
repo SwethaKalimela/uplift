@@ -67,6 +67,7 @@ describe("migrateWorkspace", () => {
     expect(migrated.draft).toEqual([{ name: "react", target: "19.3.1", note: "" }]);
     expect(migrated.filters).toMatchObject({ search: "react", bump: "all" });
     expect(migrated.editTokens).toEqual({ abc123xyz789: "secret" });
+    expect(migrated.savedPlanId).toBeNull();
   });
 
   it("passes the current version through and resets garbage", () => {

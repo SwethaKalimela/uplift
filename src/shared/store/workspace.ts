@@ -26,6 +26,7 @@ export const useWorkspace = create<WorkspaceState>()(
             sort: state.sort,
             draft: state.draft,
             editTokens: state.editTokens,
+            savedPlanId: state.savedPlanId,
           }),
           migrate: migrateWorkspace,
         },
