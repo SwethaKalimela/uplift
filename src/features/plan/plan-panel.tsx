@@ -1,9 +1,11 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Check, Link2, X } from "lucide-react";
+import { toast } from "sonner";
 import { useWorkspace } from "@/shared/store/workspace";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/input";
+import { exportDraft, exportPlan } from "./export";
 import { usePlanMutations } from "./use-plan-mutations";
 
 export function PlanPanel() {
@@ -17,9 +19,20 @@ export function PlanPanel() {
   const { plan, create, patchItem, reorder, savedPlanId } = usePlanMutations();
   const items = plan.data?.items ?? [];
 
+  const projectName = useWorkspace((state) => state.project?.name);
+  const exported = plan.data
+    ? exportPlan(plan.data)
+    : exportDraft(projectName ? `${projectName} upgrades` : "Upgrade plan", draft);
+
+  const copy = async (value: string, label: string) => {
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    toast.success(label);
+  };
+
   const copyLink = async () => {
     if (!savedPlanId) return;
-    await navigator.clipboard.writeText(`${window.location.origin}/p/${savedPlanId}`);
+    await copy(`${window.location.origin}/p/${savedPlanId}`, "Share link copied");
   };
 
   return (
@@ -147,6 +160,17 @@ export function PlanPanel() {
           </Button>
           <Button variant="ghost" size="sm" onClick={clearDraft}>
             Clear plan
+          </Button>
+        </div>
+      )}
+
+      {(draft.length > 0 || savedPlanId) && (
+        <div className="flex flex-col gap-2">
+          <Button variant="secondary" size="sm" onClick={() => void copy(exported.install, "Install command copied")}>
+            Copy npm install
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => void copy(exported.markdown, "Markdown copied")}>
+            Copy checklist
           </Button>
         </div>
       )}

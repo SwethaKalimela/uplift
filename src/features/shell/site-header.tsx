@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowUpCircle } from "lucide-react";
+import { Activity, ArrowUpCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useStoreHydrated } from "@/shared/store/hydration";
 import { useWorkspace } from "@/shared/store/workspace";
 import { Button } from "@/shared/ui/button";
+import { Kbd } from "@/shared/ui/kbd";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
 
 export function SiteHeader() {
@@ -12,6 +13,8 @@ export function SiteHeader() {
   const project = useWorkspace((state) => state.project);
   const clearProject = useWorkspace((state) => state.clearProject);
   const clearDraft = useWorkspace((state) => state.clearDraft);
+  const setCommandOpen = useWorkspace((state) => state.setCommandOpen);
+  const setInspectorOpen = useWorkspace((state) => state.setInspectorOpen);
 
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
@@ -26,6 +29,14 @@ export function SiteHeader() {
           <span className="hidden text-sm text-muted-foreground sm:inline">Plan dependency upgrades before you run them</span>
         )}
         <div className="ml-auto flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setCommandOpen(true)} className="hidden sm:inline-flex">
+            <Search />
+            Search
+            <Kbd>⌘K</Kbd>
+          </Button>
+          <Button variant="ghost" size="icon-sm" aria-label="Open cache inspector" onClick={() => setInspectorOpen(true)}>
+            <Activity />
+          </Button>
           {hydrated && project && (
             <Button
               variant="ghost"

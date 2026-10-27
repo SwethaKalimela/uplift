@@ -1,9 +1,24 @@
-import { connection } from "next/server";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { getPlan, PlanError } from "@/server/db/plans";
 import { Badge } from "@/shared/ui/badge";
 
 export const instant = false;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const plan = await getPlan(id);
+    const upgrades = plan.items.filter((item) => item.status !== "skipped").length;
+    return {
+      title: plan.name,
+      description: `${upgrades} upgrades${plan.projectName ? ` for ${plan.projectName}` : ""}`,
+    };
+  } catch {
+    return { title: "Plan" };
+  }
+}
 
 async function loadPlan(id: string) {
   try {
